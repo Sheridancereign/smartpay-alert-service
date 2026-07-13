@@ -17,7 +17,9 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from transactions.views import stripe_webhook
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path('webhook/', stripe_webhook, name='stripe-webhook'),
 ]
