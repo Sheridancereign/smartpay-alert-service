@@ -1,11 +1,13 @@
 import stripe
 from django.conf import settings
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+
 from .models import Transaction
+from .rate_limit import is_rate_limited
 from .tasks import analyze_failed_transaction
-from django.db import IntegrityError
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -13,6 +15,11 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 @require_POST
 @csrf_exempt
 def stripe_webhook(request):
+    client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+
+    if is_rate_limited(f"ratelimit:webhook:{client_ip}", limit=10, window_seconds=1):
+        return HttpResponse(status=429)
+
     payload = request.body
     sig_header = request.META['HTTP_STRIPE_SIGNATURE']
 
@@ -26,7 +33,7 @@ def stripe_webhook(request):
     except stripe.error.SignatureVerificationError:
         return HttpResponse(status=400)
 
-    if event['type'] not in ['payment_intent.succeeded','payment_intent.payment_failed']:
+    if event['type'] not in ['payment_intent.succeeded', 'payment_intent.payment_failed']:
         return HttpResponse(status=200)
 
     if Transaction.objects.filter(stripe_event_id=event['id']).exists():
@@ -53,7 +60,6 @@ def stripe_webhook(request):
         )
     except IntegrityError:
         return HttpResponse(status=200)
-
 
     if transaction.status == Transaction.Status.FAILED:
         analyze_failed_transaction.delay(str(transaction.id))
