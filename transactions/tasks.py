@@ -3,17 +3,47 @@ from celery import shared_task
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-
+import anthropic
+from django.conf import settings
 from .models import Transaction
+import redis
+
 
 redis_client = redis.from_url(settings.REDIS_URL)
 
 
 @shared_task
 def analyze_failed_transaction(transaction_id):
-    print(f"Analyzing failed transaction: {transaction_id}")
+    try:
+        transaction = Transaction.objects.get(id=transaction_id)
+    except Transaction.DoesNotExist:
+        return f"Transaction {transaction_id} not found"
 
-    return f"Analyzed transaction: {transaction_id}"
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    prompt = (
+        f"Платёж не прошёл. Причина от платёжной системы: "
+        f"\"{transaction.failure_reason or 'не указана'}\". "
+        f"Сумма: {transaction.amount} {transaction.currency}. "
+        f"Сформируй короткую (1-2 предложения) понятную рекомендацию для клиента "
+        f"о том, что делать дальше. Пиши просто, без технического жаргона."
+    )
+
+    message = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=200,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    recommendation = message.content[0].text
+
+    transaction.ai_recommendation = recommendation
+    transaction.save(update_fields=['ai_recommendation'])
+
+    print(f"AI recommendation for {transaction_id}: {recommendation}")
+    return recommendation
+
+
 
 
 @shared_task
