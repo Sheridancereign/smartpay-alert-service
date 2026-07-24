@@ -109,12 +109,18 @@ stripe trigger payment_intent.succeeded
 stripe trigger payment_intent.payment_failed
 ```
 
+## Running Tests
+
+```bash
+docker compose up -d
+poetry run pytest -v
+```
+
 ## Roadmap
 
 - [ ] PDF report generation and email delivery
 - [ ] Currency conversion via a third-party API
 - [ ] Django REST Framework API for browsing transactions and metrics
-- [ ] Test suite (pytest)
 
 ## Author
 
