@@ -147,3 +147,11 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(hour=0, minute=0),
     },
 }
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@smartpay-alert.local'
+MANAGER_EMAIL = os.getenv('MANAGER_EMAIL', 'manager@smartpay-alert.local')
+
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'

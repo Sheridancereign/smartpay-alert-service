@@ -7,6 +7,9 @@ from django.utils import timezone
 
 from .models import Transaction
 
+from django.core.mail import EmailMessage
+from .reports import build_daily_report_pdf
+
 redis_client = redis.from_url(settings.REDIS_URL)
 
 FALLBACK_RECOMMENDATION = [
@@ -80,5 +83,16 @@ def aggregate_hourly_metrics():
 @shared_task
 def generate_daily_report():
     today = timezone.now().date()
-    print(f"Generating daily report for {today}")
-    return f"Report generated for {today}"
+    pdf_bytes = build_daily_report_pdf(today)
+
+    email = EmailMessage(
+        subject=f"SmartPay Daily Report — {today.isoformat()}",
+        body=f"Please find attached the transactions report for {today.isoformat()}.",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[settings.MANAGER_EMAIL],
+    )
+    email.attach(f"report_{today.isoformat()}.pdf", pdf_bytes, "application/pdf")
+    email.send()
+
+    print(f"Daily report generated and emailed for {today}")
+    return f"Daily report generated and emailed for {today}"
