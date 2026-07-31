@@ -116,9 +116,7 @@ docker compose up -d
 poetry run pytest -v
 ```
 
-## Roadmap
-
-- [ ] PDF report generation and email delivery
+## Roadmap  
 - [ ] Currency conversion via a third-party API
 - [ ] Django REST Framework API for browsing transactions and metrics
 
