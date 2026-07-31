@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'transactions',
+    'api',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -155,3 +157,17 @@ MANAGER_EMAIL = os.getenv('MANAGER_EMAIL', 'manager@smartpay-alert.local')
 
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'SmartPay Alert & Analytics API',
+    'DESCRIPTION': 'API for monitoring Stripe transactions, AI-powered failure analysis, and metrics.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

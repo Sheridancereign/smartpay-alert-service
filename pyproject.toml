@@ -15,7 +15,8 @@ dependencies = [
     "psycopg2-binary (>=2.9.12,<3.0.0)",
     "stripe (>=15.3.0,<16.0.0)",
     "anthropic (>=0.117.0,<0.118.0)",
-    "reportlab (>=5.0.0,<6.0.0)"
+    "reportlab (>=5.0.0,<6.0.0)",
+    "drf-spectacular (>=0.30.0,<0.31.0)"
 ]
 
 
